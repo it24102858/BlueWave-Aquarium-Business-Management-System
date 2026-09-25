@@ -22,9 +22,28 @@
       "sellingPrice": 200,
       "profitMargin": 100,
       "profitMarginPct": 50,
-      "currentStock": 13,
+      "currentStock": 11.5,
       "minStockLevel": 15,
       "supplier": "Kottawa",
+      "dateAdded": "2026-09-25",
+      "notes": "",
+      "status": "active"
+    },
+    {
+      "id": "FISH-102",
+      "name": "catfish",
+      "variety": "",
+      "category": "Community",
+      "image": "",
+      "wholesalePrice": 150,
+      "sellingPrice": 300,
+      "singleSellingPrice": 150,
+      "singleWholesalePrice": 75,
+      "profitMargin": 150,
+      "profitMarginPct": 50,
+      "currentStock": 18,
+      "minStockLevel": 20,
+      "supplier": "",
       "dateAdded": "2026-09-25",
       "notes": "",
       "status": "active"
@@ -59,6 +78,68 @@
       "customerName": "",
       "notes": "",
       "createdAt": "2026-09-25T20:43:12.815Z"
+    },
+    {
+      "id": "SALE-1002",
+      "saleDate": "2026-09-25",
+      "items": [
+        {
+          "itemType": "live_fish",
+          "itemId": "FISH-101",
+          "itemName": "Goldfish",
+          "category": "Goldfish",
+          "quantity": 1.5,
+          "pairsCount": 1,
+          "singleCount": 1,
+          "sellingPrice": 200,
+          "singleSellingPrice": 100,
+          "purchaseCost": 100,
+          "singlePurchaseCost": 50,
+          "totalSaleAmount": 300,
+          "totalCost": 150,
+          "grossProfit": 150,
+          "marginPct": 50
+        }
+      ],
+      "totalAmount": 300,
+      "totalCost": 150,
+      "totalGrossProfit": 150,
+      "marginPct": 50,
+      "paymentMethod": "Cash",
+      "customerName": "",
+      "notes": "",
+      "createdAt": "2026-09-25T22:59:29.573Z"
+    },
+    {
+      "id": "SALE-1003",
+      "saleDate": "2026-09-25",
+      "items": [
+        {
+          "itemType": "live_fish",
+          "itemId": "FISH-102",
+          "itemName": "catfish",
+          "category": "Community",
+          "quantity": 2,
+          "pairsCount": 2,
+          "singleCount": 0,
+          "sellingPrice": 300,
+          "singleSellingPrice": 150,
+          "purchaseCost": 150,
+          "singlePurchaseCost": 75,
+          "totalSaleAmount": 600,
+          "totalCost": 300,
+          "grossProfit": 300,
+          "marginPct": 50
+        }
+      ],
+      "totalAmount": 600,
+      "totalCost": 300,
+      "totalGrossProfit": 300,
+      "marginPct": 50,
+      "paymentMethod": "Cash",
+      "customerName": "",
+      "notes": "",
+      "createdAt": "2026-09-25T23:01:13.366Z"
     }
   ],
   "purchases": [],
@@ -79,6 +160,21 @@
       "changeDate": "2026-09-25",
       "reason": "Initial catalog addition",
       "createdAt": "2026-09-25T20:41:06.527Z"
+    },
+    {
+      "id": "PH-5002",
+      "itemType": "live_fish",
+      "itemId": "FISH-102",
+      "itemName": "catfish",
+      "previousWholesalePrice": 150,
+      "newWholesalePrice": 150,
+      "previousSellingPrice": 300,
+      "newSellingPrice": 300,
+      "profitMargin": 150,
+      "profitMarginPct": 50,
+      "changeDate": "2026-09-25",
+      "reason": "Initial catalog addition",
+      "createdAt": "2026-09-25T23:00:38.226Z"
     }
   ],
   "inventoryAdjustments": []
