@@ -101,6 +101,7 @@ export function formatSaleFishCount(item: {
   return `${item.quantity} ${item.quantity === 1 ? 'pair' : 'pairs'}`;
 }
 
+
 /**
  * Calculate total equivalent pairs and individual fish count
  */

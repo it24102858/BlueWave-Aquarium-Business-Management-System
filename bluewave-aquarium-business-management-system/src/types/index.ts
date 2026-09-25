@@ -296,4 +296,5 @@ export interface TransactionRecord {
   category?: string;
   raw: any;
   createdAt: string;
+  
 }

@@ -670,6 +670,7 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
           </div>
         </div>
       )}
+      
 
       {/* Delete Confirmation */}
       <ConfirmModal
