@@ -1,0 +1,6 @@
+{
+  "name": "BlueWave Aquarium Business Management System",
+  "description": "Comprehensive business management system for BlueWave Aquarium with sales tracking, fish inventory, accessories, food, and financial reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

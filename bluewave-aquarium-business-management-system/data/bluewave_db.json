@@ -1,0 +1,85 @@
+{
+  "users": [
+    {
+      "id": "usr-1",
+      "email": "ruditha@bluewave.com",
+      "passwordHash": "$2b$10$3iQbAiRIfhWDQdZk6E1nZuCi6lDyHbi92AcLjAsgOzAaMueZsFiba",
+      "name": "Ruditha Yukthika",
+      "businessName": "BlueWave Aquarium",
+      "role": "owner",
+      "currencySymbol": "LKR",
+      "createdAt": "2026-09-25T19:53:21.395Z"
+    }
+  ],
+  "fishVarieties": [
+    {
+      "id": "FISH-101",
+      "name": "Goldfish",
+      "variety": "Normal Goldfish",
+      "category": "Goldfish",
+      "image": "",
+      "wholesalePrice": 100,
+      "sellingPrice": 200,
+      "profitMargin": 100,
+      "profitMarginPct": 50,
+      "currentStock": 13,
+      "minStockLevel": 15,
+      "supplier": "Kottawa",
+      "dateAdded": "2026-09-25",
+      "notes": "",
+      "status": "active"
+    }
+  ],
+  "fishFoodProducts": [],
+  "aquariumAccessories": [],
+  "sales": [
+    {
+      "id": "SALE-1001",
+      "saleDate": "2026-09-25",
+      "items": [
+        {
+          "itemType": "live_fish",
+          "itemId": "FISH-101",
+          "itemName": "Goldfish",
+          "category": "Goldfish",
+          "quantity": 2,
+          "sellingPrice": 200,
+          "purchaseCost": 100,
+          "totalSaleAmount": 400,
+          "totalCost": 200,
+          "grossProfit": 200,
+          "marginPct": 50
+        }
+      ],
+      "totalAmount": 400,
+      "totalCost": 200,
+      "totalGrossProfit": 200,
+      "marginPct": 50,
+      "paymentMethod": "Cash",
+      "customerName": "",
+      "notes": "",
+      "createdAt": "2026-09-25T20:43:12.815Z"
+    }
+  ],
+  "purchases": [],
+  "expenses": [],
+  "additionalIncome": [],
+  "priceHistory": [
+    {
+      "id": "PH-5001",
+      "itemType": "live_fish",
+      "itemId": "FISH-101",
+      "itemName": "Goldfish",
+      "previousWholesalePrice": 100,
+      "newWholesalePrice": 100,
+      "previousSellingPrice": 200,
+      "newSellingPrice": 200,
+      "profitMargin": 100,
+      "profitMarginPct": 50,
+      "changeDate": "2026-09-25",
+      "reason": "Initial catalog addition",
+      "createdAt": "2026-09-25T20:41:06.527Z"
+    }
+  ],
+  "inventoryAdjustments": []
+}
