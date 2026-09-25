@@ -17,6 +17,7 @@ import { FishVariety } from '../types';
 import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { formatFishStock, round2 } from '../utils/formatters';
 
 interface FishInventoryProps {
   currency: string;
@@ -50,6 +51,8 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
   const [formCategory, setFormCategory] = useState('Tetra');
   const [formWholesalePrice, setFormWholesalePrice] = useState('1.00');
   const [formSellingPrice, setFormSellingPrice] = useState('3.50');
+  const [formSingleSellingPrice, setFormSingleSellingPrice] = useState('1.75');
+  const [formSingleWholesalePrice, setFormSingleWholesalePrice] = useState('0.50');
   const [formCurrentStock, setFormCurrentStock] = useState('50');
   const [formMinStockLevel, setFormMinStockLevel] = useState('15');
   const [formSupplier, setFormSupplier] = useState('');
@@ -82,6 +85,8 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
     setFormCategory('Tetra');
     setFormWholesalePrice('1.00');
     setFormSellingPrice('3.50');
+    setFormSingleSellingPrice('1.75');
+    setFormSingleWholesalePrice('0.50');
     setFormCurrentStock('40');
     setFormMinStockLevel('15');
     setFormSupplier('');
@@ -97,6 +102,8 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
     setFormCategory(fish.category);
     setFormWholesalePrice(fish.wholesalePrice.toString());
     setFormSellingPrice(fish.sellingPrice.toString());
+    setFormSingleSellingPrice((fish.singleSellingPrice ?? round2(fish.sellingPrice / 2)).toString());
+    setFormSingleWholesalePrice((fish.singleWholesalePrice ?? round2(fish.wholesalePrice / 2)).toString());
     setFormCurrentStock(fish.currentStock.toString());
     setFormMinStockLevel(fish.minStockLevel.toString());
     setFormSupplier(fish.supplier || '');
@@ -108,8 +115,11 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
   // Form live calculations
   const wpNum = parseFloat(formWholesalePrice) || 0;
   const spNum = parseFloat(formSellingPrice) || 0;
+  const singleSpNum = parseFloat(formSingleSellingPrice) || round2(spNum / 2);
+  const singleWpNum = parseFloat(formSingleWholesalePrice) || round2(wpNum / 2);
   const calcMargin = spNum - wpNum;
   const calcMarginPct = spNum > 0 ? (calcMargin / spNum) * 100 : 0;
+  const singleCalcMargin = singleSpNum - singleWpNum;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,8 +136,10 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
           category: formCategory,
           wholesalePrice: wpNum,
           sellingPrice: spNum,
-          currentStock: parseInt(formCurrentStock) || 0,
-          minStockLevel: parseInt(formMinStockLevel) || 10,
+          singleSellingPrice: singleSpNum,
+          singleWholesalePrice: singleWpNum,
+          currentStock: parseFloat(formCurrentStock) || 0,
+          minStockLevel: parseFloat(formMinStockLevel) || 10,
           supplier: formSupplier,
           notes: formNotes,
           priceChangeReason: formPriceReason || 'Price updated in inventory management',
@@ -140,8 +152,10 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
           category: formCategory,
           wholesalePrice: wpNum,
           sellingPrice: spNum,
-          currentStock: parseInt(formCurrentStock) || 0,
-          minStockLevel: parseInt(formMinStockLevel) || 10,
+          singleSellingPrice: singleSpNum,
+          singleWholesalePrice: singleWpNum,
+          currentStock: parseFloat(formCurrentStock) || 0,
+          minStockLevel: parseFloat(formMinStockLevel) || 10,
           supplier: formSupplier,
           notes: formNotes,
         });
@@ -331,29 +345,33 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
                         <span className="text-slate-600 font-medium">{fish.category}</span>
                       </td>
                       <td className="py-3.5 px-4 text-center">
-                        <div className="inline-flex items-center gap-1.5">
-                          <span
-                            className={`font-black text-sm ${
-                              isLow ? 'text-rose-600' : 'text-slate-800'
-                            }`}
-                          >
-                            {fish.currentStock} {fish.currentStock === 1 ? 'pair' : 'pairs'}
-                          </span>
-                          {isLow && (
+                        <div className="inline-flex flex-col items-center">
+                          <div className="inline-flex items-center gap-1.5">
                             <span
-                              className="text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded-md flex items-center gap-0.5"
-                              title={`Below minimum stock threshold of ${fish.minStockLevel} pairs`}
+                              className={`font-black text-xs ${
+                                isLow ? 'text-rose-600' : 'text-slate-800'
+                              }`}
                             >
-                              <AlertTriangle className="w-3 h-3" /> Low
+                              {formatFishStock(fish.currentStock)}
                             </span>
-                          )}
+                            {isLow && (
+                              <span
+                                className="text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded-md flex items-center gap-0.5"
+                                title={`Below minimum stock threshold of ${fish.minStockLevel} pairs`}
+                              >
+                                <AlertTriangle className="w-3 h-3" /> Low
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-medium text-slate-500">
-                        {currency}{fish.wholesalePrice.toFixed(2)}
+                      <td className="py-3.5 px-4 text-right">
+                        <span className="font-medium text-slate-600 block">{currency}{fish.wholesalePrice.toFixed(2)} <span className="text-[10px] text-slate-400">/pair</span></span>
+                        <span className="text-[10px] text-slate-400 block">{currency}{(fish.singleWholesalePrice ?? round2(fish.wholesalePrice / 2)).toFixed(2)} /single</span>
                       </td>
-                      <td className="py-3.5 px-4 text-right font-black text-slate-900">
-                        {currency}{fish.sellingPrice.toFixed(2)}
+                      <td className="py-3.5 px-4 text-right">
+                        <span className="font-black text-slate-900 block">{currency}{fish.sellingPrice.toFixed(2)} <span className="text-[10px] text-slate-400">/pair</span></span>
+                        <span className="text-[10px] font-semibold text-[#0077B6] block">{currency}{(fish.singleSellingPrice ?? round2(fish.sellingPrice / 2)).toFixed(2)} /single</span>
                       </td>
                       <td className="py-3.5 px-4 text-right font-black text-emerald-600">
                         +{currency}{fish.profitMargin.toFixed(2)}
@@ -489,14 +507,19 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-600 mb-1">
-                      Wholesale Purchase Price per Pair ({currency.trim()})
+                      Wholesale Price / Pair ({currency.trim()})
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
                       value={formWholesalePrice}
-                      onChange={(e) => setFormWholesalePrice(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormWholesalePrice(val);
+                        const num = parseFloat(val) || 0;
+                        setFormSingleWholesalePrice(round2(num / 2).toString());
+                      }}
                       required
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0077B6]"
                     />
@@ -504,30 +527,67 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-600 mb-1">
-                      Current Selling Price per Pair ({currency.trim()})
+                      Selling Price / Pair ({currency.trim()})
                     </label>
                     <input
                       type="number"
                       step="0.01"
                       min="0"
                       value={formSellingPrice}
-                      onChange={(e) => setFormSellingPrice(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormSellingPrice(val);
+                        const num = parseFloat(val) || 0;
+                        setFormSingleSellingPrice(round2(num / 2).toString());
+                      }}
+                      required
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0077B6]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">
+                      Wholesale Cost / Single Fish ({currency.trim()})
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formSingleWholesalePrice}
+                      onChange={(e) => setFormSingleWholesalePrice(e.target.value)}
+                      required
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0077B6]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1">
+                      Selling Price / Single Fish ({currency.trim()})
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formSingleSellingPrice}
+                      onChange={(e) => setFormSingleSellingPrice(e.target.value)}
                       required
                       className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs md:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0077B6]"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-sky-200/60 text-xs">
+                <div className="flex flex-wrap items-center justify-between pt-2 border-t border-sky-200/60 text-xs gap-2">
                   <div>
-                    <span className="text-slate-500">Calculated Profit / Pair: </span>
+                    <span className="text-slate-500">Pair Profit: </span>
                     <span className="font-extrabold text-emerald-600">
-                      +{currency}{calcMargin.toFixed(2)}
+                      +{currency}{calcMargin.toFixed(2)} ({calcMarginPct.toFixed(1)}%)
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Profit Margin %: </span>
-                    <span className="font-extrabold text-[#0077B6]">{calcMarginPct.toFixed(1)}%</span>
+                    <span className="text-slate-500">Single Fish Profit: </span>
+                    <span className="font-extrabold text-[#0077B6]">
+                      +{currency}{singleCalcMargin.toFixed(2)} ({singleSpNum > 0 ? ((singleCalcMargin / singleSpNum) * 100).toFixed(1) : 0}%)
+                    </span>
                   </div>
                 </div>
               </div>

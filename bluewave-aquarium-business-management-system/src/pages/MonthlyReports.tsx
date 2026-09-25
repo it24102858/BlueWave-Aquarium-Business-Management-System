@@ -28,6 +28,7 @@ import {
 import { MonthlyReportData } from '../types';
 import { api } from '../services/api';
 import { useToast } from '../components/Toast';
+import { formatFishStock } from '../utils/formatters';
 
 interface MonthlyReportsProps {
   currency: string;
@@ -361,8 +362,8 @@ export const MonthlyReports: React.FC<MonthlyReportsProps> = ({ currency }) => {
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="p-3 bg-sky-50 rounded-xl border border-sky-100">
                   <Fish className="w-5 h-5 mx-auto text-[#0077B6] mb-1" />
-                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Fish Sold (Pairs)</span>
-                  <span className="text-lg font-black text-slate-800">{report.metrics.fishSold} {report.metrics.fishSold === 1 ? 'pair' : 'pairs'}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block">Fish Sold</span>
+                  <span className="text-base font-black text-slate-800">{formatFishStock(report.metrics.fishSold)}</span>
                 </div>
                 <div className="p-3 bg-amber-50 rounded-xl border border-amber-100">
                   <UtensilsCrossed className="w-5 h-5 mx-auto text-amber-600 mb-1" />
@@ -392,7 +393,7 @@ export const MonthlyReports: React.FC<MonthlyReportsProps> = ({ currency }) => {
                       </div>
                       <div className="text-right">
                         <span className="font-bold text-slate-900 block">
-                          {p.quantity} {p.type === 'live_fish' ? (p.quantity === 1 ? 'pair' : 'pairs') : 'units'}
+                          {p.type === 'live_fish' ? formatFishStock(p.quantity) : `${p.quantity} units`}
                         </span>
                         <span className="text-[10px] text-emerald-600 font-semibold">
                           +{currency}{p.profit.toFixed(2)} profit

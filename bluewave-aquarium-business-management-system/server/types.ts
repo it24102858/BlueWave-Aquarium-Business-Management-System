@@ -6,6 +6,8 @@ export interface FishVariety {
   image?: string;
   wholesalePrice: number;
   sellingPrice: number;
+  singleSellingPrice?: number;
+  singleWholesalePrice?: number;
   profitMargin: number;
   profitMarginPct: number;
   currentStock: number;
@@ -60,8 +62,12 @@ export interface SaleItem {
   itemName: string;
   category: string;
   quantity: number;
+  pairsCount?: number;
+  singleCount?: number;
   sellingPrice: number;
+  singleSellingPrice?: number;
   purchaseCost: number;
+  singlePurchaseCost?: number;
   totalSaleAmount: number;
   totalCost: number;
   grossProfit: number;

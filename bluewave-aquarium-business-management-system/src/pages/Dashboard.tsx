@@ -27,6 +27,7 @@ import {
 } from 'recharts';
 import { DashboardStats, Sale } from '../types';
 import { NavigationPage } from '../components/Sidebar';
+import { formatFishStock } from '../utils/formatters';
 
 interface DashboardProps {
   stats: DashboardStats | null;
@@ -161,13 +162,29 @@ export const Dashboard: React.FC<DashboardProps> = ({
         {/* 4. Total Fish Sold Today */}
         <div className="bg-white p-4.5 rounded-2xl border border-slate-100 shadow-xs hover:border-sky-200 transition-all">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Fish Sold Today (Pairs)</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Fish Sold Today</span>
             <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0077B6] flex items-center justify-center">
               <Fish className="w-4 h-4" />
             </div>
           </div>
           <div className="text-xl md:text-2xl font-black text-[#12304A]">
-            {today.fishSold} <span className="text-xs font-normal text-slate-400">{today.fishSold === 1 ? 'pair' : 'pairs'}</span>
+            {today.fishPairsSold != null && today.fishSinglesSold != null && (today.fishPairsSold > 0 || today.fishSinglesSold > 0) ? (
+              <div>
+                <span>{today.fishPairsSold} {today.fishPairsSold === 1 ? 'pair' : 'pairs'}</span>
+                {today.fishSinglesSold > 0 && (
+                  <span className="text-sm font-bold text-[#0077B6] ml-1.5">
+                    + {today.fishSinglesSold} {today.fishSinglesSold === 1 ? 'single' : 'singles'}
+                  </span>
+                )}
+                <span className="text-xs font-normal text-slate-400 block mt-0.5">
+                  ({today.totalFishCountSold} total fish)
+                </span>
+              </div>
+            ) : (
+              <span>
+                {today.fishSold} <span className="text-xs font-normal text-slate-400">{today.fishSold === 1 ? 'pair' : 'pairs'}</span>
+              </span>
+            )}
           </div>
           <div className="mt-1 text-[11px] text-slate-500">
             Total items sold: {today.totalItemsSold} (Food: {today.foodSold} · Acc: {today.accessoriesSold})
@@ -540,7 +557,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div>
                       <p className="text-sm font-bold text-slate-800">{fish.name}</p>
                       <p className="text-xs text-slate-400">
-                        {fish.quantity} {fish.quantity === 1 ? 'pair' : 'pairs'} sold · Revenue: {currency}{fish.revenue.toFixed(2)}
+                        {formatFishStock(fish.quantity)} sold · Revenue: {currency}{fish.revenue.toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -588,7 +605,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div>
                       <p className="text-sm font-bold text-slate-800">{item.name}</p>
                       <p className="text-xs text-slate-400">
-                        Live Fish · Current: <span className="text-rose-600 font-bold">{item.currentStock} {item.currentStock === 1 ? 'pair' : 'pairs'}</span> (Min: {item.minStockLevel} pairs)
+                        Live Fish · Current: <span className="text-rose-600 font-bold">{formatFishStock(item.currentStock)}</span> (Min: {formatFishStock(item.minStockLevel)})
                       </p>
                     </div>
                     <button
