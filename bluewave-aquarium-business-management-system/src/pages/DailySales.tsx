@@ -1271,7 +1271,6 @@ export const DailySales: React.FC<DailySalesProps> = ({
         </div>
       )}
 
-
       {/* Delete Confirmation Modal */}
       <ConfirmModal
         isOpen={!!deleteSaleTarget}

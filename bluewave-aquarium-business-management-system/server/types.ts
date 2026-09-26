@@ -175,5 +175,5 @@ export interface AppDatabase {
   additionalIncome: AdditionalIncome[];
   priceHistory: PriceHistoryRecord[];
   inventoryAdjustments: InventoryAdjustment[];
-  
+
 }

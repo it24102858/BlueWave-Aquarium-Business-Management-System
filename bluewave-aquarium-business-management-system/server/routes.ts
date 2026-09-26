@@ -2116,7 +2116,6 @@ apiRouter.post('/backup/reset', authMiddleware, async (_req: AuthRequest, res: R
   res.json({ success: true, message: 'All demo data cleared. Ready for live records.', freshDb });
 });
 
-
 // ----------------------------------------------------
 // MONGODB ATLAS STATUS & SYNC
 // ----------------------------------------------------

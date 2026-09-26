@@ -344,7 +344,6 @@ export const MonthlyReports: React.FC<MonthlyReportsProps> = ({ currency }) => {
                 </div>
               </div>
 
-
               {/* Wholesale inventory purchases note */}
               <div className="pt-2 text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                 <span className="font-bold text-slate-700 block">Inventory Restocking Capital:</span>
