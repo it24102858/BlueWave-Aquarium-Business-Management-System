@@ -16,6 +16,25 @@ import {
 
 const TOKEN_KEY = 'bluewave_jwt_token';
 
+function buildQueryString(params?: Record<string, any>): string {
+  if (!params) return '';
+  const searchParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (
+      value !== undefined &&
+      value !== null &&
+      value !== '' &&
+      value !== 'all' &&
+      value !== 'undefined' &&
+      value !== 'null'
+    ) {
+      searchParams.append(key, String(value).trim());
+    }
+  }
+  const str = searchParams.toString();
+  return str ? `?${str}` : '';
+}
+
 export const api = {
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
@@ -100,8 +119,7 @@ export const api = {
 
   // Fish Varieties
   getFish(params?: { search?: string; category?: string; status?: string }): Promise<FishVariety[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/fish${query ? `?${query}` : ''}`);
+    return this.request(`/fish${buildQueryString(params)}`);
   },
 
   createFish(data: Partial<FishVariety>): Promise<FishVariety> {
@@ -126,8 +144,7 @@ export const api = {
 
   // Fish Food Products
   getFishFood(params?: { search?: string; category?: string; brand?: string; status?: string }): Promise<FishFoodProduct[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/food${query ? `?${query}` : ''}`);
+    return this.request(`/food${buildQueryString(params)}`);
   },
 
   createFishFood(data: Partial<FishFoodProduct>): Promise<FishFoodProduct> {
@@ -152,8 +169,7 @@ export const api = {
 
   // Aquarium Accessories
   getAccessories(params?: { search?: string; category?: string; brand?: string; status?: string }): Promise<AquariumAccessory[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/accessories${query ? `?${query}` : ''}`);
+    return this.request(`/accessories${buildQueryString(params)}`);
   },
 
   createAccessory(data: Partial<AquariumAccessory>): Promise<AquariumAccessory> {
@@ -178,8 +194,7 @@ export const api = {
 
   // Sales
   getSales(params?: { dateFrom?: string; dateTo?: string; paymentMethod?: string; itemType?: string; search?: string }): Promise<Sale[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/sales${query ? `?${query}` : ''}`);
+    return this.request(`/sales${buildQueryString(params)}`);
   },
 
   createSale(data: {
@@ -210,13 +225,19 @@ export const api = {
 
   // Purchases
   getPurchases(params?: { itemType?: string; supplier?: string; search?: string }): Promise<Purchase[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/purchases${query ? `?${query}` : ''}`);
+    return this.request(`/purchases${buildQueryString(params)}`);
   },
 
   createPurchase(data: Partial<Purchase>): Promise<Purchase> {
     return this.request('/purchases', {
       method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updatePurchase(id: string, data: Partial<Purchase>): Promise<Purchase> {
+    return this.request(`/purchases/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(data),
     });
   },
@@ -229,8 +250,7 @@ export const api = {
 
   // Expenses & Income
   getExpenses(params?: { dateFrom?: string; dateTo?: string; category?: string }): Promise<Expense[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/expenses${query ? `?${query}` : ''}`);
+    return this.request(`/expenses${buildQueryString(params)}`);
   },
 
   createExpense(data: Partial<Expense>): Promise<Expense> {
@@ -254,8 +274,7 @@ export const api = {
   },
 
   getIncome(params?: { dateFrom?: string; dateTo?: string }): Promise<AdditionalIncome[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/income${query ? `?${query}` : ''}`);
+    return this.request(`/income${buildQueryString(params)}`);
   },
 
   createIncome(data: Partial<AdditionalIncome>): Promise<AdditionalIncome> {
@@ -282,8 +301,7 @@ export const api = {
       totalChanges: number;
     };
   }> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/price-history${query ? `?${query}` : ''}`);
+    return this.request(`/price-history${buildQueryString(params)}`);
   },
 
   // Adjustments
@@ -305,8 +323,7 @@ export const api = {
 
   // Transactions
   getTransactions(params?: { type?: string; search?: string; dateFrom?: string; dateTo?: string }): Promise<TransactionRecord[]> {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request(`/transactions${query ? `?${query}` : ''}`);
+    return this.request(`/transactions${buildQueryString(params)}`);
   },
 
   // Backup & Reset & MongoDB

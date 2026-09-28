@@ -60,6 +60,14 @@ function adjustProductStock(
   return false;
 }
 
+// Helper to safely clean query parameters (handles "undefined", "null", "all", empty strings)
+function cleanQueryParam(param: any): string | undefined {
+  if (param === undefined || param === null) return undefined;
+  const str = String(param).trim();
+  if (str === '' || str === 'undefined' || str === 'null' || str === 'all') return undefined;
+  return str;
+}
+
 // ----------------------------------------------------
 // AUTHENTICATION ROUTES
 // ----------------------------------------------------
@@ -458,16 +466,18 @@ apiRouter.get('/dashboard/stats', authMiddleware, (_req: AuthRequest, res: Respo
 // ----------------------------------------------------
 apiRouter.get('/fish', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { search, category, status } = req.query;
+  const search = cleanQueryParam(req.query.search);
+  const category = cleanQueryParam(req.query.category);
+  const status = cleanQueryParam(req.query.status);
 
   let list = db.fishVarieties;
-  if (status && status !== 'all') {
-    list = list.filter((f) => f.status === status);
+  if (status) {
+    list = list.filter((f) => f.status.toLowerCase() === status.toLowerCase());
   }
-  if (category && category !== 'all') {
-    list = list.filter((f) => f.category === category);
+  if (category) {
+    list = list.filter((f) => f.category.toLowerCase() === category.toLowerCase());
   }
-  if (search && typeof search === 'string') {
+  if (search) {
     const q = search.toLowerCase();
     list = list.filter(
       (f) =>
@@ -475,7 +485,7 @@ apiRouter.get('/fish', authMiddleware, (req: AuthRequest, res: Response) => {
         f.variety.toLowerCase().includes(q) ||
         f.id.toLowerCase().includes(q) ||
         f.category.toLowerCase().includes(q) ||
-        f.supplier.toLowerCase().includes(q)
+        (f.supplier && f.supplier.toLowerCase().includes(q))
     );
   }
 
@@ -666,26 +676,30 @@ apiRouter.delete('/fish/:id', authMiddleware, async (req: AuthRequest, res: Resp
 // ----------------------------------------------------
 apiRouter.get('/food', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { search, category, brand, status } = req.query;
+  const search = cleanQueryParam(req.query.search);
+  const category = cleanQueryParam(req.query.category);
+  const brand = cleanQueryParam(req.query.brand);
+  const status = cleanQueryParam(req.query.status);
 
   let list = db.fishFoodProducts;
-  if (status && status !== 'all') {
-    list = list.filter((f) => f.status === status);
+  if (status) {
+    list = list.filter((f) => f.status.toLowerCase() === status.toLowerCase());
   }
-  if (category && category !== 'all') {
-    list = list.filter((f) => f.category === category);
+  if (category) {
+    list = list.filter((f) => f.category.toLowerCase() === category.toLowerCase());
   }
-  if (brand && brand !== 'all') {
-    list = list.filter((f) => f.brand.toLowerCase() === (brand as string).toLowerCase());
+  if (brand) {
+    list = list.filter((f) => f.brand.toLowerCase() === brand.toLowerCase());
   }
-  if (search && typeof search === 'string') {
+  if (search) {
     const q = search.toLowerCase();
     list = list.filter(
       (f) =>
         f.name.toLowerCase().includes(q) ||
         f.brand.toLowerCase().includes(q) ||
         f.category.toLowerCase().includes(q) ||
-        f.id.toLowerCase().includes(q)
+        f.id.toLowerCase().includes(q) ||
+        (f.supplier && f.supplier.toLowerCase().includes(q))
     );
   }
 
@@ -851,26 +865,30 @@ apiRouter.delete('/food/:id', authMiddleware, async (req: AuthRequest, res: Resp
 // ----------------------------------------------------
 apiRouter.get('/accessories', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { search, category, brand, status } = req.query;
+  const search = cleanQueryParam(req.query.search);
+  const category = cleanQueryParam(req.query.category);
+  const brand = cleanQueryParam(req.query.brand);
+  const status = cleanQueryParam(req.query.status);
 
   let list = db.aquariumAccessories;
-  if (status && status !== 'all') {
-    list = list.filter((a) => a.status === status);
+  if (status) {
+    list = list.filter((a) => a.status.toLowerCase() === status.toLowerCase());
   }
-  if (category && category !== 'all') {
-    list = list.filter((a) => a.category === category);
+  if (category) {
+    list = list.filter((a) => a.category.toLowerCase() === category.toLowerCase());
   }
-  if (brand && brand !== 'all') {
-    list = list.filter((a) => a.brand.toLowerCase() === (brand as string).toLowerCase());
+  if (brand) {
+    list = list.filter((a) => a.brand.toLowerCase() === brand.toLowerCase());
   }
-  if (search && typeof search === 'string') {
+  if (search) {
     const q = search.toLowerCase();
     list = list.filter(
       (a) =>
         a.name.toLowerCase().includes(q) ||
         a.brand.toLowerCase().includes(q) ||
         a.category.toLowerCase().includes(q) ||
-        a.id.toLowerCase().includes(q)
+        a.id.toLowerCase().includes(q) ||
+        (a.supplier && a.supplier.toLowerCase().includes(q))
     );
   }
 
@@ -1036,23 +1054,37 @@ apiRouter.delete('/accessories/:id', authMiddleware, async (req: AuthRequest, re
 // ----------------------------------------------------
 apiRouter.get('/sales', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { dateFrom, dateTo, paymentMethod, itemType, search } = req.query;
+  const dateFrom = cleanQueryParam(req.query.dateFrom);
+  const dateTo = cleanQueryParam(req.query.dateTo);
+  const date = cleanQueryParam(req.query.date);
+  const paymentMethod = cleanQueryParam(req.query.paymentMethod);
+  const itemType = cleanQueryParam(req.query.itemType);
+  const search = cleanQueryParam(req.query.search);
 
   let list = db.sales;
 
-  if (dateFrom && typeof dateFrom === 'string') {
-    list = list.filter((s) => s.saleDate >= dateFrom);
+  if (date) {
+    list = list.filter((s) => s.saleDate === date);
+  } else {
+    if (dateFrom && dateTo && dateFrom === dateTo) {
+      list = list.filter((s) => s.saleDate === dateFrom);
+    } else {
+      if (dateFrom) {
+        list = list.filter((s) => s.saleDate >= dateFrom);
+      }
+      if (dateTo) {
+        list = list.filter((s) => s.saleDate <= dateTo);
+      }
+    }
   }
-  if (dateTo && typeof dateTo === 'string') {
-    list = list.filter((s) => s.saleDate <= dateTo);
+
+  if (paymentMethod) {
+    list = list.filter((s) => s.paymentMethod.toLowerCase() === paymentMethod.toLowerCase());
   }
-  if (paymentMethod && paymentMethod !== 'all') {
-    list = list.filter((s) => s.paymentMethod === paymentMethod);
+  if (itemType) {
+    list = list.filter((s) => s.items.some((it) => it.itemType.toLowerCase() === itemType.toLowerCase()));
   }
-  if (itemType && itemType !== 'all') {
-    list = list.filter((s) => s.items.some((it) => it.itemType === itemType));
-  }
-  if (search && typeof search === 'string') {
+  if (search) {
     const q = search.toLowerCase();
     list = list.filter(
       (s) =>
@@ -1318,18 +1350,25 @@ apiRouter.delete('/sales/:id', authMiddleware, async (req: AuthRequest, res: Res
 // ----------------------------------------------------
 apiRouter.get('/purchases', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { itemType, supplier, search } = req.query;
+  const itemType = cleanQueryParam(req.query.itemType);
+  const supplier = cleanQueryParam(req.query.supplier);
+  const search = cleanQueryParam(req.query.search);
 
   let list = db.purchases;
-  if (itemType && itemType !== 'all') {
-    list = list.filter((p) => p.itemType === itemType);
+  if (itemType) {
+    list = list.filter((p) => p.itemType.toLowerCase() === itemType.toLowerCase());
   }
-  if (supplier && supplier !== 'all') {
-    list = list.filter((p) => p.supplier.toLowerCase().includes((supplier as string).toLowerCase()));
+  if (supplier) {
+    list = list.filter((p) => p.supplier.toLowerCase().includes(supplier.toLowerCase()));
   }
-  if (search && typeof search === 'string') {
+  if (search) {
     const q = search.toLowerCase();
-    list = list.filter((p) => p.itemName.toLowerCase().includes(q) || p.supplier.toLowerCase().includes(q) || p.id.toLowerCase().includes(q));
+    list = list.filter(
+      (p) =>
+        p.itemName.toLowerCase().includes(q) ||
+        p.supplier.toLowerCase().includes(q) ||
+        p.id.toLowerCase().includes(q)
+    );
   }
 
   list = [...list].sort((a, b) => new Date(b.purchaseDate).getTime() - new Date(a.purchaseDate).getTime());
@@ -1462,6 +1501,86 @@ apiRouter.post('/purchases', authMiddleware, async (req: AuthRequest, res: Respo
   res.status(201).json(newPurchase);
 });
 
+apiRouter.put('/purchases/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const db = getDatabase();
+  const index = db.purchases.findIndex((p) => p.id === id);
+
+  if (index === -1) {
+    res.status(404).json({ error: 'Purchase record not found' });
+    return;
+  }
+
+  const existing = db.purchases[index];
+  const { purchaseDate, quantity, purchasePrice, supplier, notes, updateCatalogPrice } = req.body;
+
+  const oldQty = existing.quantity;
+  const newQty = quantity != null ? Number(quantity) : oldQty;
+  const newPrice = purchasePrice != null ? Number(purchasePrice) : existing.purchasePrice;
+  const qtyDiff = newQty - oldQty;
+
+  // Adjust stock by difference
+  if (qtyDiff !== 0) {
+    adjustProductStock(existing.itemType, existing.itemId, qtyDiff);
+  }
+
+  const updatedPurchase: Purchase = {
+    ...existing,
+    purchaseDate: purchaseDate || existing.purchaseDate,
+    supplier: supplier != null ? supplier.trim() : existing.supplier,
+    quantity: newQty,
+    purchasePrice: newPrice,
+    totalCost: round2(newQty * newPrice),
+    notes: notes != null ? notes.trim() : existing.notes,
+    updateCatalogPrice: updateCatalogPrice != null ? Boolean(updateCatalogPrice) : existing.updateCatalogPrice,
+  };
+
+  if (updatedPurchase.updateCatalogPrice && newPrice !== existing.purchasePrice) {
+    if (existing.itemType === 'live_fish') {
+      const fish = db.fishVarieties.find((f) => f.id === existing.itemId);
+      if (fish) {
+        fish.wholesalePrice = newPrice;
+        fish.profitMargin = round2(fish.sellingPrice - newPrice);
+        fish.profitMarginPct = fish.sellingPrice > 0 ? round2((fish.profitMargin / fish.sellingPrice) * 100) : 0;
+        await mongoUpdateDoc('fishVarieties', fish.id, fish);
+      }
+    } else if (existing.itemType === 'fish_food') {
+      const food = db.fishFoodProducts.find((f) => f.id === existing.itemId);
+      if (food) {
+        food.wholesalePrice = newPrice;
+        food.profitMargin = round2(food.sellingPrice - newPrice);
+        food.profitMarginPct = food.sellingPrice > 0 ? round2((food.profitMargin / food.sellingPrice) * 100) : 0;
+        await mongoUpdateDoc('fishFoodProducts', food.id, food);
+      }
+    } else if (existing.itemType === 'accessory') {
+      const acc = db.aquariumAccessories.find((a) => a.id === existing.itemId);
+      if (acc) {
+        acc.wholesalePrice = newPrice;
+        acc.profitMargin = round2(acc.sellingPrice - newPrice);
+        acc.profitMarginPct = acc.sellingPrice > 0 ? round2((acc.profitMargin / acc.sellingPrice) * 100) : 0;
+        await mongoUpdateDoc('aquariumAccessories', acc.id, acc);
+      }
+    }
+  }
+
+  db.purchases[index] = updatedPurchase;
+  await mongoUpdateDoc('purchases', id, updatedPurchase);
+
+  if (existing.itemType === 'live_fish') {
+    const f = db.fishVarieties.find((item) => item.id === existing.itemId);
+    if (f) await mongoUpdateDoc('fishVarieties', f.id, f);
+  } else if (existing.itemType === 'fish_food') {
+    const f = db.fishFoodProducts.find((item) => item.id === existing.itemId);
+    if (f) await mongoUpdateDoc('fishFoodProducts', f.id, f);
+  } else if (existing.itemType === 'accessory') {
+    const a = db.aquariumAccessories.find((item) => item.id === existing.itemId);
+    if (a) await mongoUpdateDoc('aquariumAccessories', a.id, a);
+  }
+
+  await saveDatabase(db);
+  res.json(updatedPurchase);
+});
+
 apiRouter.delete('/purchases/:id', authMiddleware, async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const db = getDatabase();
@@ -1487,17 +1606,19 @@ apiRouter.delete('/purchases/:id', authMiddleware, async (req: AuthRequest, res:
 // ----------------------------------------------------
 apiRouter.get('/expenses', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { dateFrom, dateTo, category } = req.query;
+  const dateFrom = cleanQueryParam(req.query.dateFrom);
+  const dateTo = cleanQueryParam(req.query.dateTo);
+  const category = cleanQueryParam(req.query.category);
 
   let list = db.expenses;
-  if (dateFrom && typeof dateFrom === 'string') {
+  if (dateFrom) {
     list = list.filter((e) => e.date >= dateFrom);
   }
-  if (dateTo && typeof dateTo === 'string') {
+  if (dateTo) {
     list = list.filter((e) => e.date <= dateTo);
   }
-  if (category && category !== 'all') {
-    list = list.filter((e) => e.category === category);
+  if (category) {
+    list = list.filter((e) => e.category.toLowerCase() === category.toLowerCase());
   }
 
   list = [...list].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -1577,13 +1698,14 @@ apiRouter.delete('/expenses/:id', authMiddleware, async (req: AuthRequest, res: 
 
 apiRouter.get('/income', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { dateFrom, dateTo } = req.query;
+  const dateFrom = cleanQueryParam(req.query.dateFrom);
+  const dateTo = cleanQueryParam(req.query.dateTo);
 
   let list = db.additionalIncome;
-  if (dateFrom && typeof dateFrom === 'string') {
+  if (dateFrom) {
     list = list.filter((i) => i.date >= dateFrom);
   }
-  if (dateTo && typeof dateTo === 'string') {
+  if (dateTo) {
     list = list.filter((i) => i.date <= dateTo);
   }
 
@@ -1636,19 +1758,22 @@ apiRouter.delete('/income/:id', authMiddleware, async (req: AuthRequest, res: Re
 // ----------------------------------------------------
 apiRouter.get('/price-history', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { itemId, itemType, dateFrom, dateTo } = req.query;
+  const itemId = cleanQueryParam(req.query.itemId);
+  const itemType = cleanQueryParam(req.query.itemType);
+  const dateFrom = cleanQueryParam(req.query.dateFrom);
+  const dateTo = cleanQueryParam(req.query.dateTo);
 
   let list = db.priceHistory;
-  if (itemId && itemId !== 'all') {
+  if (itemId) {
     list = list.filter((p) => p.itemId === itemId);
   }
-  if (itemType && itemType !== 'all') {
-    list = list.filter((p) => p.itemType === itemType);
+  if (itemType) {
+    list = list.filter((p) => p.itemType.toLowerCase() === itemType.toLowerCase());
   }
-  if (dateFrom && typeof dateFrom === 'string') {
+  if (dateFrom) {
     list = list.filter((p) => p.changeDate >= dateFrom);
   }
-  if (dateTo && typeof dateTo === 'string') {
+  if (dateTo) {
     list = list.filter((p) => p.changeDate <= dateTo);
   }
 
@@ -1931,7 +2056,6 @@ apiRouter.get('/reports/monthly', authMiddleware, (req: AuthRequest, res: Respon
 // ----------------------------------------------------
 apiRouter.get('/transactions', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDatabase();
-  const { type, search, dateFrom, dateTo } = req.query;
 
   interface TransactionItem {
     id: string;
@@ -2063,17 +2187,22 @@ apiRouter.get('/transactions', authMiddleware, (req: AuthRequest, res: Response)
     });
   });
 
+  const type = cleanQueryParam(req.query.type);
+  const search = cleanQueryParam(req.query.search);
+  const dateFrom = cleanQueryParam(req.query.dateFrom);
+  const dateTo = cleanQueryParam(req.query.dateTo);
+
   let filtered = transactions;
-  if (type && type !== 'all') {
-    filtered = filtered.filter((t) => t.type === type);
+  if (type) {
+    filtered = filtered.filter((t) => t.type.toLowerCase() === type.toLowerCase());
   }
-  if (dateFrom && typeof dateFrom === 'string') {
+  if (dateFrom) {
     filtered = filtered.filter((t) => t.date >= dateFrom);
   }
-  if (dateTo && typeof dateTo === 'string') {
+  if (dateTo) {
     filtered = filtered.filter((t) => t.date <= dateTo);
   }
-  if (search && typeof search === 'string') {
+  if (search) {
     const q = search.toLowerCase();
     filtered = filtered.filter(
       (t) =>

@@ -88,9 +88,10 @@ export const DailySales: React.FC<DailySalesProps> = ({
       const [salesData, fishData, foodData, accData] = await Promise.all([
         api.getSales({
           dateFrom: dateFilter || undefined,
+          dateTo: dateFilter || undefined,
           paymentMethod: paymentFilter !== 'all' ? paymentFilter : undefined,
           itemType: typeFilter !== 'all' ? typeFilter : undefined,
-          search: searchTerm || undefined,
+          search: searchTerm.trim() || undefined,
         }),
         api.getFish(),
         api.getFishFood(),
@@ -433,6 +434,12 @@ export const DailySales: React.FC<DailySalesProps> = ({
       } else {
         const created = await api.createSale(payload);
         success(`Sale #${created.id} recorded and inventory deducted!`);
+        if (dateFilter && dateFilter !== formDate) {
+          setDateFilter('');
+        }
+        setSearchTerm('');
+        setPaymentFilter('all');
+        setTypeFilter('all');
       }
 
       setIsModalOpen(false);
@@ -536,27 +543,41 @@ export const DailySales: React.FC<DailySalesProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Quick Date Shortcuts */}
+          <button
+            onClick={() => setDateFilter(new Date().toISOString().split('T')[0])}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              dateFilter === new Date().toISOString().split('T')[0]
+                ? 'bg-[#0077B6] text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            Today's Sales
+          </button>
+          <button
+            onClick={() => setDateFilter('')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+              dateFilter === ''
+                ? 'bg-[#12304A] text-white shadow-xs'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            All Sales
+          </button>
+
           {/* Date filter */}
           <input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6]"
+            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6]"
           />
-          {dateFilter && (
-            <button
-              onClick={() => setDateFilter('')}
-              className="text-xs text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
-            >
-              Clear Date
-            </button>
-          )}
 
           {/* Payment filter */}
           <select
             value={paymentFilter}
             onChange={(e) => setPaymentFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6] cursor-pointer"
+            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6] cursor-pointer"
           >
             <option value="all">All Payments</option>
             <option value="Cash">Cash</option>
@@ -569,13 +590,27 @@ export const DailySales: React.FC<DailySalesProps> = ({
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6] cursor-pointer"
+            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6] cursor-pointer"
           >
             <option value="all">All Product Types</option>
             <option value="live_fish">Live Fish</option>
             <option value="fish_food">Fish Food</option>
             <option value="accessory">Accessories</option>
           </select>
+
+          {(searchTerm || dateFilter || paymentFilter !== 'all' || typeFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setDateFilter('');
+                setPaymentFilter('all');
+                setTypeFilter('all');
+              }}
+              className="px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -661,24 +696,26 @@ export const DailySales: React.FC<DailySalesProps> = ({
                       {sale.marginPct.toFixed(1)}%
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-1.5">
                         <button
                           onClick={() => setDetailSale(sale)}
-                          className="p-1.5 text-slate-400 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                          className="px-2 py-1 text-slate-600 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer font-semibold text-xs flex items-center gap-1 border border-slate-200"
                           title="View Receipt Details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Receipt</span>
                         </button>
                         <button
                           onClick={() => openEditSaleModal(sale)}
-                          className="p-1.5 text-slate-400 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                          className="px-2 py-1 text-slate-600 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer font-semibold text-xs flex items-center gap-1 border border-slate-200"
                           title="Edit Sale"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <Edit2 className="w-3.5 h-3.5 text-[#0077B6]" />
+                          <span>Edit</span>
                         </button>
                         <button
                           onClick={() => setDeleteSaleTarget(sale)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-rose-100"
                           title="Delete Sale & Restore Stock"
                         >
                           <Trash2 className="w-4 h-4" />

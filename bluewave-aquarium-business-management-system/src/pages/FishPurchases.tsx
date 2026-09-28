@@ -5,6 +5,7 @@ import {
   Search,
   Filter,
   Trash2,
+  Edit2,
   Calendar,
   Layers,
   X,
@@ -51,6 +52,7 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
 
   // Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingPurchase, setEditingPurchase] = useState<Purchase | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Purchase | null>(null);
 
   // Form
@@ -69,7 +71,7 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
       const [purchasesData, fishData, foodData, accessoriesData] = await Promise.all([
         api.getPurchases({
           itemType: typeFilter !== 'all' ? typeFilter : undefined,
-          search: searchTerm || undefined,
+          search: searchTerm.trim() || undefined,
         }),
         api.getFish(),
         api.getFishFood(),
@@ -98,6 +100,7 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
   }, [openNewPurchaseTrigger, preselectedItemId, preselectedItemType]);
 
   const openModal = (targetItemId?: string, targetType?: 'live_fish' | 'fish_food' | 'accessory') => {
+    setEditingPurchase(null);
     const pType = targetType || 'live_fish';
     setFormType(pType);
     setFormDate(new Date().toISOString().split('T')[0]);
@@ -120,6 +123,19 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
 
     setFormUpdateCatalogPrice(true);
     setFormNotes('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (purchase: Purchase) => {
+    setEditingPurchase(purchase);
+    setFormDate(purchase.purchaseDate);
+    setFormType(purchase.itemType);
+    setFormItemId(purchase.itemId);
+    setFormSupplier(purchase.supplier);
+    setFormQuantity(purchase.quantity.toString());
+    setFormPurchasePrice(purchase.purchasePrice.toString());
+    setFormUpdateCatalogPrice(purchase.updateCatalogPrice);
+    setFormNotes(purchase.notes || '');
     setIsModalOpen(true);
   };
 
@@ -174,21 +190,34 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
     }
 
     try {
-      await api.createPurchase({
-        purchaseDate: formDate,
-        itemType: formType,
-        itemId: formItemId,
-        itemName,
-        supplier: formSupplier,
-        quantity: qtyNum,
-        purchasePrice: ppNum,
-        updateCatalogPrice: formUpdateCatalogPrice,
-        notes: formNotes,
-      });
+      if (editingPurchase) {
+        await api.updatePurchase(editingPurchase.id, {
+          purchaseDate: formDate,
+          supplier: formSupplier,
+          quantity: qtyNum,
+          purchasePrice: ppNum,
+          updateCatalogPrice: formUpdateCatalogPrice,
+          notes: formNotes,
+        });
+        success(`Purchase #${editingPurchase.id} updated! Inventory adjusted.`);
+      } else {
+        await api.createPurchase({
+          purchaseDate: formDate,
+          itemType: formType,
+          itemId: formItemId,
+          itemName,
+          supplier: formSupplier,
+          quantity: qtyNum,
+          purchasePrice: ppNum,
+          updateCatalogPrice: formUpdateCatalogPrice,
+          notes: formNotes,
+        });
 
-      const unitLabel = formType === 'live_fish' ? (qtyNum === 1 ? 'pair' : 'pairs') : (qtyNum === 1 ? 'unit' : 'units');
-      success(`Wholesale intake of ${qtyNum} ${unitLabel} of "${itemName}" recorded! Inventory updated.`);
+        const unitLabel = formType === 'live_fish' ? (qtyNum === 1 ? 'pair' : 'pairs') : (qtyNum === 1 ? 'unit' : 'units');
+        success(`Wholesale intake of ${qtyNum} ${unitLabel} of "${itemName}" recorded! Inventory updated.`);
+      }
       setIsModalOpen(false);
+      setEditingPurchase(null);
       loadData();
       if (onRefreshStats) onRefreshStats();
     } catch (err: any) {
@@ -365,13 +394,22 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <button
-                        onClick={() => setDeleteTarget(purchase)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                        title="Delete Purchase & Adjust Stock"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => openEditModal(purchase)}
+                          className="p-1.5 text-slate-400 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                          title="Edit Purchase Record"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(purchase)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Purchase & Adjust Stock"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -392,10 +430,10 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
                 </div>
                 <div>
                   <h3 className="font-extrabold text-lg text-[#12304A]">
-                    Record Wholesale Batch Purchase
+                    {editingPurchase ? `Edit Wholesale Purchase #${editingPurchase.id}` : 'Record Wholesale Batch Purchase'}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Stock will automatically increase for the selected product
+                    {editingPurchase ? 'Update purchase information, supplier, costs or quantity' : 'Stock will automatically increase for the selected product'}
                   </p>
                 </div>
               </div>
@@ -551,7 +589,7 @@ export const FishPurchases: React.FC<FishPurchasesProps> = ({
                   type="submit"
                   className="px-5 py-2.5 text-xs md:text-sm font-bold text-white bg-[#0077B6] hover:bg-[#023E8A] rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
-                  Confirm Purchase & Restock
+                  {editingPurchase ? 'Update Purchase Record' : 'Confirm Purchase & Restock'}
                 </button>
               </div>
             </form>

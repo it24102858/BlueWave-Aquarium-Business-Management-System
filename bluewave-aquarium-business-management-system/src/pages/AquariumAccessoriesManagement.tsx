@@ -150,6 +150,8 @@ export const AquariumAccessoriesManagement: React.FC<AquariumAccessoriesManageme
           notes: formDescription,
         });
         success(`New accessory "${formName}" added!`);
+        setCategoryFilter('all');
+        setSearchTerm('');
       }
 
       setIsModalOpen(false);

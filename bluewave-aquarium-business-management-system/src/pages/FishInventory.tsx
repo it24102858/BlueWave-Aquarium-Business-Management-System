@@ -59,11 +59,26 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
   const [formNotes, setFormNotes] = useState('');
   const [formPriceReason, setFormPriceReason] = useState('');
 
+  const dynamicCategories = Array.from(
+    new Set([
+      'Tetra',
+      'Cichlid',
+      'Dwarf Cichlid',
+      'Livebearer',
+      'Anabantoid',
+      'Catfish & Algae Eaters',
+      'Marine',
+      'Goldfish',
+      'Community',
+      ...fishList.map((f) => f.category).filter(Boolean),
+    ])
+  );
+
   const loadFish = async () => {
     try {
       setIsLoading(true);
       const data = await api.getFish({
-        search: searchTerm || undefined,
+        search: searchTerm.trim() || undefined,
         category: categoryFilter !== 'all' ? categoryFilter : undefined,
       });
       setFishList(data);
@@ -71,6 +86,21 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
       error(err.message || 'Failed to load fish inventory');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleQuickStockAdjust = async (fish: FishVariety, delta: number) => {
+    const newStock = Math.max(0, round2(fish.currentStock + delta));
+    try {
+      await api.updateFish(fish.id, {
+        currentStock: newStock,
+        priceChangeReason: `Stock adjusted by ${delta > 0 ? '+' : ''}${delta} pairs`,
+      });
+      success(`Stock for "${fish.name}" updated to ${formatFishStock(newStock)}.`);
+      loadFish();
+      if (onRefreshStats) onRefreshStats();
+    } catch (err: any) {
+      error(err.message || 'Failed to update stock');
     }
   };
 
@@ -160,6 +190,9 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
           notes: formNotes,
         });
         success(`New fish variety "${formName}" added!`);
+        setCategoryFilter('all');
+        setSearchTerm('');
+        setStockStatusFilter('all');
       }
       setIsModalOpen(false);
       loadFish();
@@ -275,14 +308,11 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
             className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0077B6] cursor-pointer"
           >
             <option value="all">All Categories</option>
-            <option value="Tetra">Tetra</option>
-            <option value="Cichlid">Cichlid</option>
-            <option value="Dwarf Cichlid">Dwarf Cichlid</option>
-            <option value="Livebearer">Livebearer</option>
-            <option value="Anabantoid">Betta / Anabantoid</option>
-            <option value="Catfish & Algae Eaters">Catfish & Algae Eaters</option>
-            <option value="Marine">Marine / Saltwater</option>
-            <option value="Goldfish">Goldfish / Coldwater</option>
+            {dynamicCategories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </select>
 
           {/* Stock status */}
@@ -295,6 +325,19 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
             <option value="low_stock">⚠️ Low Stock Alerts Only</option>
             <option value="in_stock">Healthy Stock Only</option>
           </select>
+
+          {(searchTerm || categoryFilter !== 'all' || stockStatusFilter !== 'all') && (
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setCategoryFilter('all');
+                setStockStatusFilter('all');
+              }}
+              className="px-2.5 py-1.5 text-xs text-slate-500 hover:text-slate-800 font-bold bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -363,6 +406,23 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
                               </span>
                             )}
                           </div>
+                          <div className="flex items-center gap-1 mt-1 text-[10px]">
+                            <button
+                              onClick={() => handleQuickStockAdjust(fish, -1)}
+                              disabled={fish.currentStock <= 0}
+                              className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 disabled:opacity-30 rounded text-slate-600 font-bold cursor-pointer"
+                              title="Deduct 1 pair"
+                            >
+                              -1
+                            </button>
+                            <button
+                              onClick={() => handleQuickStockAdjust(fish, 1)}
+                              className="px-1.5 py-0.5 bg-sky-50 hover:bg-sky-100 rounded text-[#0077B6] font-bold cursor-pointer"
+                              title="Add 1 pair"
+                            >
+                              +1
+                            </button>
+                          </div>
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -383,7 +443,7 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
                         {fish.supplier || 'Wholesale Supplier'}
                       </td>
                       <td className="py-3.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1.5">
                           {onQuickPurchase && (
                             <button
                               onClick={() => onQuickPurchase(fish.id, 'live_fish')}
@@ -395,15 +455,16 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
                           )}
                           <button
                             onClick={() => openEditFishModal(fish)}
-                            className="p-1.5 text-slate-400 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer"
+                            className="px-2 py-1 text-slate-600 hover:text-[#0077B6] hover:bg-sky-50 rounded-lg transition-colors cursor-pointer font-semibold text-xs flex items-center gap-1 border border-slate-200"
                             title="Edit Details & Prices"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <Edit2 className="w-3.5 h-3.5 text-[#0077B6]" />
+                            <span>Edit</span>
                           </button>
                           <button
                             onClick={() => setDeleteTarget(fish)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Delete Fish"
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-rose-100"
+                            title="Delete Fish Variety"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -670,7 +731,7 @@ export const FishInventory: React.FC<FishInventoryProps> = ({
           </div>
         </div>
       )}
-    
+
       {/* Delete Confirmation */}
       <ConfirmModal
         isOpen={!!deleteTarget}

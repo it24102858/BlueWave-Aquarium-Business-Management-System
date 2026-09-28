@@ -151,6 +151,9 @@ export const FishFoodManagement: React.FC<FishFoodManagementProps> = ({
           notes: formDescription,
         });
         success(`New fish food product "${formName}" added!`);
+        setCategoryFilter('all');
+        setBrandFilter('all');
+        setSearchTerm('');
       }
 
       setIsModalOpen(false);
